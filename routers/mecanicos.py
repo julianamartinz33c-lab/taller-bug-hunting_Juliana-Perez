@@ -9,6 +9,7 @@ from schemas.schemas import MecanicoCreate, MecanicoResponse
 
 router = APIRouter(prefix="/mecanicos", tags=["Mecánicos"])
 
+
 @router.post("/", status_code=201, response_model=MecanicoResponse)
 async def crear_mecanico(mecanico: MecanicoCreate, db: AsyncSession = Depends(obtener_bd)):
     nuevo = MecanicoModel(**mecanico.model_dump())
@@ -17,10 +18,12 @@ async def crear_mecanico(mecanico: MecanicoCreate, db: AsyncSession = Depends(ob
     await db.refresh(nuevo)
     return nuevo
 
+
 @router.get("/", response_model=List[MecanicoResponse])
 async def listar_mecanicos(db: AsyncSession = Depends(obtener_bd)):
-    resultado = await db.execute(select(MecanicoModel))
+    resultado = await db.execute(select(MecanicoModel).where(MecanicoModel.activo == True))  # Error 3
     return resultado.scalars().all()
+
 
 @router.delete("/{mecanico_id}", status_code=204)
 async def desactivar_mecanico(mecanico_id: int, db: AsyncSession = Depends(obtener_bd)):
@@ -30,4 +33,5 @@ async def desactivar_mecanico(mecanico_id: int, db: AsyncSession = Depends(obten
         raise HTTPException(status_code=404, detail="Mecánico no encontrado")
 
     mecanico.activo = False
+    await db.commit()  #error 2
     return None
